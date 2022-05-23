@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 void main() {
   runApp(MaterialApp(
@@ -31,17 +35,29 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   var tab = 0;
   var a = TextStyle(color: Colors.black);
+  var userImage;
+
+  saveData() async {
+    var storage = await SharedPreferences.getInstance();
+    storage.setString('name', 'john');
+    var result = storage.get('name');
+    print(result);
+
+  }
+
+
+
+
 
   getData() async {
     var result = await http.get(
         Uri.parse('https://codingapple1.github.io/app/data.json'));
-    print(result.body);
-    print('바보');
   }
 
   @override
   void initState() {
     super.initState();
+    saveData();
     getData();
   }
 
@@ -51,8 +67,16 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: Text('Instagram'),
           actions: [
-            IconButton(onPressed: (){
-              Navigator.push(context, MaterialPageRoute(builder: (c){return Upload();})
+            IconButton(onPressed: () async {
+              var picker = ImagePicker();
+              var image = await picker.pickImage(source: ImageSource.gallery);
+              if(image != null){
+                setState((){
+                  userImage = File(image.path);
+                });
+              }
+
+              Navigator.push(context, MaterialPageRoute(builder: (c){return Upload(userImage: userImage);})
               );
             }, icon: Icon(Icons.add_box_outlined),
             iconSize: 30,),
@@ -110,7 +134,8 @@ class home extends StatelessWidget {
 }
 
 class Upload extends StatelessWidget {
-  const Upload({Key? key}) : super(key: key);
+  const Upload({Key? key, this.userImage}) : super(key: key);
+  final userImage;
 
   @override
   Widget build(BuildContext context) {
@@ -119,6 +144,7 @@ class Upload extends StatelessWidget {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Image.file((userImage)),
           Text('이미지업로드화면'),
           IconButton(onPressed: (){
             Navigator.pop((context));
